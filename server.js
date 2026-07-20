@@ -4,10 +4,11 @@ const cors = require("cors");
 const crypto = require("crypto");
 require("dotenv").config();
 
-   if (!process.env.KEY_ID || !process.env.KEY_SECRET) {
-     console.error("Missing Razorpay API Keys");
-     process.exit(1);
-   }
+if (!process.env.KEY_ID || !process.env.KEY_SECRET) {
+  console.error("Missing Razorpay API Keys");
+  process.exit(1);
+}
+
 const app = express();
 
 app.use(cors());
@@ -35,6 +36,34 @@ app.post("/create-order", async (req, res) => {
       success: false,
       message: "Order creation failed",
     });
+  }
+});
+
+app.post("/verify-payment", (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ verified: false, error: "Missing fields" });
+    }
+
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.KEY_SECRET)
+      .update(body)
+      .digest("hex");
+
+    const isValid = expectedSignature === razorpay_signature;
+
+    if (isValid) {
+      return res.status(200).json({ verified: true });
+    }
+
+    return res.status(400).json({ verified: false, error: "Invalid signature" });
+  } catch (err) {
+    console.error("Verification error:", err);
+    return res.status(500).json({ verified: false, error: "Server error" });
   }
 });
 
