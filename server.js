@@ -22,10 +22,10 @@ const razorpay = new Razorpay({
 app.post("/create-order", async (req, res) => {
   try {
     const options = {
-      amount: req.body.amount,
-      currency: "INR",
-      receipt: "receipt_" + Date.now(),
-    };
+     amount: Math.round(Number(req.body.amount) * 100), // convert rupees to paise
+     currency: "INR",
+     receipt: "receipt_" + Date.now(),
+   };
 
     const order = await razorpay.orders.create(options);
 
