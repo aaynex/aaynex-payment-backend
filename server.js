@@ -1,8 +1,13 @@
 const express = require("express");
 const Razorpay = require("razorpay");
 const cors = require("cors");
+const crypto = require("crypto");
 require("dotenv").config();
 
+   if (!process.env.KEY_ID || !process.env.KEY_SECRET) {
+     console.error("Missing Razorpay API Keys");
+     process.exit(1);
+   }
 const app = express();
 
 app.use(cors());
